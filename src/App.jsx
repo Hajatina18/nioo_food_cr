@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { LOGO, LOGO_RATIO } from "./logo.js";
 
 // Nombre >= 0 (les valeurs vides ou négatives deviennent 0)
 const n = (v) => Math.max(0, parseFloat(v) || 0);
@@ -79,12 +80,17 @@ export default function App() {
   const exportPdf = () => {
     if (errors.length) return;
     const doc = new jsPDF();
+    // En-tete : logo + titre + date
+    const pageW = doc.internal.pageSize.getWidth();
+    const logoW = 40;
+    const logoH = logoW / LOGO_RATIO;
+    doc.addImage(LOGO, "JPEG", pageW - 14 - logoW, 10, logoW, logoH);
     doc.setFontSize(18);
-    doc.text("Nioo Food - Compte rendu", 14, 18);
+    doc.text("Compte rendu de production et ventes", 14, 19);
     doc.setFontSize(11);
-    doc.text("Date : " + date, 14, 26);
+    doc.text("Date : " + date, 14, 27);
     autoTable(doc, {
-      startY: 32,
+      startY: 10 + logoH + 8,
       head: [["Produit", "Stock initial", "Production", "Disponible", "Vendu", "Reste", "CA (Ar)"]],
       body: rows.map((r) => [r.name, r.stock, r.prod, r.avail, r.sold, r.left, fmt(r.rev)]),
       foot: [["Total", "", "", T.avail, T.sold, T.avail - T.sold, fmt(T.rev)]],
@@ -113,8 +119,12 @@ export default function App() {
   return (
     <div className="w">
       <style>{css}</style>
-      <h1>Nioo Food</h1>
-      <p className="sub">Compte rendu de production et de ventes de jus</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <div>
+          <p className="sub">Compte rendu de production et de ventes de jus</p>
+        </div>
+        <img src={LOGO} alt="Nioo" style={{ height: 56 }} />
+      </div>
 
       {errors.length > 0 && (
         <div className="alert" role="alert">
